@@ -12,4 +12,4 @@ We'll be gradually building up a version of [Badger Brain](https://github.com/re
 
 ---
 
-We are recording architectural decisions as we go, using [Lightweight Architecture Decision Records (ADRs)](https://adr.github.io/) — you can read them [here](docs/adr/README.md).
+We are recording architectural decisions as we go, using [Lightweight Architecture Decision Records (ADRs)](https://adr.github.io/) — you can read them [here](docs/adr/).

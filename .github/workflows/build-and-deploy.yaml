@@ -100,20 +100,8 @@ jobs:
 
       - name: update image digest
         run: |
-          gh_branch=${GITHUB_REF#refs/heads/}
-          overlay=dev
-
-          if [[ $gh_branch == staging || $gh_branch == ${{ matrix.service }}-staging || $gh_branch == release/* || $gh_branch == master ]]; then
-            overlay=staging
-          fi
-
-          if [[ $gh_branch == master ]]; then
-            overlay=prod
-          fi
-
           make ci \
             service=${{ matrix.service }} \
-            overlay=$overlay \
             tag=$GITHUB_SHA \
             digest=${{ needs.build_and_push.outputs.digest }} \
 

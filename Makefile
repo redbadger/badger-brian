@@ -3,13 +3,12 @@ digest := digest
 build-url := https://github.com/redbadger/badger-brian/actions/
 
 service := service-name
-overlay := dev
 
 repo := ghcr.io/redbdager
 
 .PHONY: ci
 ci: ## sets tag for deployment
-	cd ./manifests/$(service)/overlays/$(overlay) \
+	cd ./manifests/$(service) \
 	&& kustomize edit set image $(repo)/$(service)=$(repo)/$(service)@$(digest)
 
 .PHONY: ci-finish

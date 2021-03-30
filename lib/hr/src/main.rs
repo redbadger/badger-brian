@@ -61,6 +61,7 @@ impl Human {
         }
     }
 
+    /// The manager of the human.
     async fn manager(&self) -> Human {
         Human("david.wynne@red-badger.com".to_string())
     }

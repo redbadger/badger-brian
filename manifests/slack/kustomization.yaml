@@ -4,10 +4,10 @@ kind: Kustomization
 namespace: slack
 
 resources:
-  - namespace.yaml
-  - service-account.yaml
-  - deployment.yaml
-  - service.yaml
+- namespace.yaml
+- service-account.yaml
+- deployment.yaml
+- service.yaml
 
 images:
 - digest: sha256:f4a02a5547c0ee17cf36ccc40a15c44830c4be00f070f2842f9c725ece41ba22

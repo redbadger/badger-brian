@@ -84,13 +84,13 @@ jobs:
 
   deploy:
     needs: [get_changed_services, build_and_push]
-    if: ${{ needs.get_changed_services.outputs.matrix_empty == 'false' }}
+    if:  $GITHUB_REF == refs/heads/master && ${{ needs.get_changed_services.outputs.matrix_empty == 'false' }}
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
 
     steps:
-      - name: checkout config repo
+      - name: checkout repo
         uses: actions/checkout@v2
 
       - name: setup kustomize

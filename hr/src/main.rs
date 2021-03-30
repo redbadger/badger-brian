@@ -18,9 +18,7 @@ fn main() -> Result<()> {
 async fn run() -> Result<()> {
     let listen_addr = env::var("LISTEN_ADDR").unwrap_or_else(|_| "localhost:8000".to_owned());
 
-    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
-        //todo        .data(StarWars::new())
-        .finish();
+    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
 
     println!("Playground: http://{}", listen_addr);
 
@@ -64,8 +62,8 @@ impl Human {
     }
 
     /// The manager id of the human.
-    async fn manager_id(&self) -> &str {
-        "david.wynne@red-badger.com"
+    async fn manager(&self) -> Human {
+        Human("david.wynne@red-badger.com".to_string())
     }
 }
 

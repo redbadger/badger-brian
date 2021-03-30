@@ -103,7 +103,7 @@ jobs:
           make ci \
             service=${{ matrix.service }} \
             tag=$GITHUB_SHA \
-            digest=${{ needs.build_and_push.outputs.digest }} \
+            digest=${{ needs.build_and_push.outputs.digest }}
 
       - name: prepare deployment
         run: |
@@ -114,4 +114,4 @@ jobs:
           make ci-finish \
             service=${{ matrix.service }} \
             branch=$gh_branch \
-            build-url=$workflow_url \
+            build-url=$workflow_url

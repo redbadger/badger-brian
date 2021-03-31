@@ -90,7 +90,7 @@ jobs:
 
   deploy:
     needs: [get_changed_services, build_and_push]
-    if: ${{ github.ref == 'refs/heads/master' && needs.get_changed_services.outputs.has_changed_services == 'false' }}
+    if: ${{ github.ref == 'refs/heads/master' && needs.get_changed_services.outputs.has_changed_services == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}

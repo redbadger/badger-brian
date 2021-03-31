@@ -13,3 +13,6 @@ images:
 - digest: sha256:f4a02a5547c0ee17cf36ccc40a15c44830c4be00f070f2842f9c725ece41ba22
   name: ghcr.io/redbadger/slack
   newName: ghcr.io/redbadger/slack
+- digest: sha256:63f6b4115727c2e921a9818bad0f1080754344d63f129323323aa457a34ce473
+  name: ghcr.io/redbdager/slack
+  newName: ghcr.io/redbdager/slack

@@ -13,7 +13,7 @@ jobs:
       matrix_empty: ${{ steps.set-matrix.outputs.matrix_empty }}
     steps:
       - name: checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v1 # v1 is needed so that master is included in the refs
 
       - name: install go
         uses: actions/setup-go@v2
@@ -25,6 +25,7 @@ jobs:
           go get -d github.com/charypar/monobuild
           go install github.com/charypar/monobuild@latest
 
+      # outputs a list of services needing to be built/deployed
       - name: set services matrix
         id: set-matrix
         run: |
@@ -37,6 +38,7 @@ jobs:
             schedule=$(monobuild diff --base-branch origin/master)
           fi
           dependencies=$(echo "$schedule" | awk 'BEGIN { FS = ":" } ; { print $1 }')
+          # create list of dependencies
           list="["
           for dep in ${dependencies[@]}; do
             service=$(basename $dep)
@@ -45,6 +47,7 @@ jobs:
           # remove last comma
           list="${list%,}]"
 
+          # outputs variable `matrix` which will be used to run concurrent jobs
           echo "::set-output name=matrix::{\"service\":$list}"
           if [[ $list == "[]" ]]; then
             echo "::set-output name=matrix_empty::true"
@@ -53,10 +56,13 @@ jobs:
           fi
 
   build_and_push:
+    # Waits for get_changed_services to run
     needs: get_changed_services
     if: ${{ needs.get_changed_services.outputs.matrix_empty == 'false' }}
     runs-on: ubuntu-latest
     strategy:
+      # Will run a concurrent job for each element in the matrix
+      # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
       matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
     outputs:
       digest: ${{ steps.docker-build.outputs.digest }}
@@ -98,6 +104,7 @@ jobs:
         with:
           kustomize-version: "3.1.0"
 
+      # Uses kustomize to update service's manifests
       - name: update image digest
         run: |
           make ci \
@@ -105,6 +112,8 @@ jobs:
             tag=$GITHUB_SHA \
             digest=${{ needs.build_and_push.outputs.digest }}
 
+      # Pushes image digest changes to master branch
+      # Infinite actions loop is avoided as matrix_empty will be true
       - name: prepare deployment
         run: |
           workflow_url=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID

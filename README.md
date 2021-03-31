@@ -13,3 +13,37 @@ We'll be gradually building up a version of [Badger Brain](https://github.com/re
 ---
 
 We are recording architectural decisions as we go, using [Lightweight Architecture Decision Records (ADRs)](https://adr.github.io/) — you can read them [here](docs/adr/).
+
+---
+
+## Monorepo Structure
+#### `/lib`
+This is where our services live, any service in here will be run by the
+[CI](#ci) and will eventually be deployed on our k8s cluster.
+
+#### `/manifests`
+This is effectively our gitops directory. It contains manifests for k8s and dapr
+which will be applied to the cluster on push/merge to master.
+
+## CI
+To allow the CI to run on your service you'll need to set up a few things:
+- A `Dependencies` file to your service root, this is used by
+  [monobuild](https://github.com/charypar/monobuild) to build a dependency graph
+- A `Dockerfile` so that your service can be built and distributed
+- A directory of manifests for our k8s instance under
+  `/manifests/<SERVICE_NAME>` so the CI can update the image digest to the
+  latest version
+
+The CI uses [monobuild](https://github.com/charypar/monobuild) to create a
+dependency graph for our services and then creates a matrix of services and
+dependant services to build/deploy.
+
+There are three steps to the CI workflow:
+
+1. Gets the services that have been updated and builds the dependency map for
+   what needs to be run
+3. Builds and deploys docker images from the services
+4. Updates the manifests of the services using
+   [kustomize](https://kustomize.io/) to updating the image digest in the
+   service's respective `/manifests/<SERVICE_NAME>/kustomization.yaml` file
+   (only run on master currently - unless we want to add overlays/multiple envs)

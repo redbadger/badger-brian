@@ -1,0 +1,126 @@
+name: build and deploy
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  get_changed_services:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_changed_services: ${{ steps.set-matrix.outputs.has_changed_services }}
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v1 # v1 is needed so that master is included in the refs
+
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.6'
+
+      - name: install monobuild
+        run: |
+          go get -d github.com/charypar/monobuild
+          go install github.com/charypar/monobuild@latest
+
+      # outputs a list of services needing to be built/deployed
+      - name: set services matrix
+        id: set-matrix
+        run: |
+          # See https://github.com/charypar/monobuild#change-detection
+          if [[ $GITHUB_REF == refs/heads/master ]]; then
+            # Main branch mode
+            schedule=$(monobuild diff --main-branch)
+          else
+            # Feature branch mode
+            schedule=$(monobuild diff --base-branch origin/master)
+          fi
+          dependencies=$(echo "$schedule" | awk 'BEGIN { FS = ":" } ; { print $1 }')
+          # create list of dependencies
+          list="["
+          for dep in ${dependencies[@]}; do
+            service=$(basename $dep)
+            list="$list\"$service\",";
+          done
+          # remove last comma
+          list="${list%,}]"
+
+          # outputs variable `matrix` which will be used to run concurrent jobs
+          echo "::set-output name=matrix::{\"service\":$list}"
+          if [[ $list == "[]" ]]; then
+            echo "::set-output name=has_changed_services::false"
+          else
+            echo "::set-output name=has_changed_services::true"
+          fi
+
+  build_and_push:
+    # Waits for get_changed_services to run
+    needs: get_changed_services
+    if: ${{ needs.get_changed_services.outputs.has_changed_services == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Will run a concurrent job for each element in the matrix
+      # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
+      matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
+    outputs:
+      digest: ${{ steps.docker-build.outputs.digest }}
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: docker-build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./lib/${{ matrix.service }}
+          push: true
+          tags: |
+            ghcr.io/redbadger/${{ matrix.service }}:latest
+            ghcr.io/redbadger/${{ matrix.service }}:${{ github.sha }}
+
+  deploy:
+    needs: [get_changed_services, build_and_push]
+    if: ${{ github.ref == 'refs/heads/master' && needs.get_changed_services.outputs.has_changed_services == 'false' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+
+      - name: setup kustomize
+        uses: imranismail/setup-kustomize@v1
+        with:
+          kustomize-version: "3.1.0"
+
+      # Uses kustomize to update service's manifests
+      - name: update image digest
+        run: |
+          make ci \
+            service=${{ matrix.service }} \
+            tag=$GITHUB_SHA \
+            digest=${{ needs.build_and_push.outputs.digest }}
+
+      # Pushes image digest changes to master branch
+      # Infinite actions loop is avoided as has_changed_services will be false
+      - name: prepare deployment
+        run: |
+          workflow_url=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          gh_branch=${GITHUB_REF#refs/heads/}
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GH Actions Build"
+          make ci-finish \
+            service=${{ matrix.service }} \
+            branch=$gh_branch \
+            build-url=$workflow_url

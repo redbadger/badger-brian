@@ -16,7 +16,7 @@ fn main() -> Result<()> {
 }
 
 async fn run() -> Result<()> {
-    let listen_addr = env::var("LISTEN_ADDR").unwrap_or_else(|_| "localhost:8000".to_owned());
+    let listen_addr = env::var("PORT").unwrap_or_else(|_| "0.0.0.0:3000".to_owned());
 
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
 

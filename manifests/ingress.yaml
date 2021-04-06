@@ -1,0 +1,17 @@
+# kubectl apply -f ./manifests/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: api-gateway-rules
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - http:
+        paths:
+          # Only expose the Dapr invoke API, lets us call our services and nothing more
+          - path: /
+            backend:
+              serviceName: nginx-ingress-dapr
+              servicePort: 80                

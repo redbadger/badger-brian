@@ -1,0 +1,10 @@
+# helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+# helm repo update
+# helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
+controller:
+  podAnnotations:
+    dapr.io/enabled: "true"
+    # This has to match the name of the nginx controller as installed by helm, that is the <name> in `helm install <name>`
+    # Although the helm chart also contains nginx-express I think, so you have to `helm install nginx-ingress`
+    dapr.io/app-id: "nginx-ingress"
+    dapr.io/port: "80"

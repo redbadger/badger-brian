@@ -47,3 +47,44 @@ There are three steps to the CI workflow:
    [kustomize](https://kustomize.io/) to updating the image digest in the
    service's respective `/manifests/<SERVICE_NAME>/kustomization.yaml` file
    (only run on master currently - unless we want to add overlays/multiple envs)
+
+### WIP: deployment to kubernetes
+
+Create a kubernetes cluster somewhere
+
+```bash
+gcloud container clusters create dapr --num-nodes=1
+```
+
+Install Dapr on the cluster
+
+```bash
+dapr init -k
+```
+
+Install the Hello Kubernetes Quickstart example Node App. <node.yaml> is https://github.com/dapr/quickstarts/blob/master/hello-kubernetes/deploy/node.yaml. This also installs the Dapr side car, as defined in the yaml
+
+```bash
+kubectl apply -f <node.yaml>
+```
+
+Install the nginx ingress controller
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
+```
+
+Install the ingress rules. These forward to the dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
+
+```bash
+kubectl apply -f ./manifests/ingress.yaml
+```
+
+Call the node app via dapr. The external Ip address of the ingress controller can be found from  `kubectl get services`.
+
+```
+curl http://<external-ip-address-of-ingress-controller>/v1.0/invoke/nodeapp/method/ports
+```
+
+At this point the node app is still available directly on the external id address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.

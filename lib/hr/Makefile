@@ -1,4 +1,4 @@
-app := slack
+app := hr
 image := ghcr.io/redbadger/$(app)
 tag := latest
 

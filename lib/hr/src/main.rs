@@ -16,11 +16,11 @@ fn main() -> Result<()> {
 }
 
 async fn run() -> Result<()> {
-    let listen_addr = env::var("PORT").unwrap_or_else(|_| "0.0.0.0:3000".to_owned());
+    let host_and_port = env::var("LISTEN_HOST_AND_PORT").unwrap_or_else(|_| "0.0.0.0:3000".to_owned());
 
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
 
-    println!("Playground: http://{}", listen_addr);
+    println!("Playground: http://{}", host_and_port);
 
     let mut app = tide::new();
 
@@ -36,7 +36,7 @@ async fn run() -> Result<()> {
         Ok(resp)
     });
 
-    app.listen(listen_addr).await?;
+    app.listen(host_and_port).await?;
 
     Ok(())
 }

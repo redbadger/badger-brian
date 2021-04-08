@@ -17,11 +17,11 @@ We are recording architectural decisions as we go, using [Lightweight Architectu
 ---
 
 ## Monorepo Structure
-#### `/lib`
+### `/lib`
 This is where our services live, any service in here will be run by the
 [CI](#ci) and will eventually be deployed on our k8s cluster.
 
-#### `/manifests`
+### `/manifests`
 This is effectively our gitops directory. It contains manifests for k8s and dapr
 which will be applied to the cluster on push/merge to master.
 
@@ -42,13 +42,18 @@ There are three steps to the CI workflow:
 
 1. Gets the services that have been updated and builds the dependency map for
    what needs to be run
-3. Builds and deploys docker images from the services
-4. Updates the manifests of the services using
+2. Builds and deploys docker images from the services
+3. Updates the manifests of the services using
    [kustomize](https://kustomize.io/) to updating the image digest in the
    service's respective `/manifests/<SERVICE_NAME>/kustomization.yaml` file
    (only run on master currently - unless we want to add overlays/multiple envs)
+   and then pushes those changes to master.
+   - We avoid an infinite loop of actions being run as the `deploy` job has a
+     condition that a service must have been updated to run. The `deploy` job
+     doesn't update any services, only manifests, so the push from the `deploy`
+     job will never run another `deploy` job.
 
-### WIP: deployment to kubernetes
+## WIP: deployment to kubernetes
 
 Create a kubernetes cluster somewhere
 

@@ -13,3 +13,6 @@ images:
 - digest: sha256:f4a02a5547c0ee17cf36ccc40a15c44830c4be00f070f2842f9c725ece41ba22
   name: ghcr.io/redbadger/hr
   newName: ghcr.io/redbadger/hr
+- digest: sha256:9584fbcb56f312991c0118fba11ec7dbd66c1fee307f7eca1dfccf37283e07d7
+  name: ghcr.io/redbdager/hr
+  newName: ghcr.io/redbdager/hr

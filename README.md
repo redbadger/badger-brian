@@ -67,10 +67,10 @@ Install Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/
 dapr init -k
 ```
 
-Install the Hello Kubernetes Quickstart example Node App. <node.yaml> is https://github.com/dapr/quickstarts/blob/master/hello-kubernetes/deploy/node.yaml. This also installs the Dapr side car, as defined in the yaml
+Install the Hello Kubernetes Quickstart example Node App. This also installs the Dapr side car, as defined in the yaml
 
 ```bash
-kubectl apply -f <node.yaml>
+kubectl apply -f https://github.com/dapr/quickstarts/blob/master/hello-kubernetes/deploy/node.yaml
 ```
 
 Install the nginx ingress controller

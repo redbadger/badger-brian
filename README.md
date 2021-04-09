@@ -61,7 +61,7 @@ Create a kubernetes cluster somewhere
 gcloud container clusters create dapr --num-nodes=1
 ```
 
-Install Dapr on the cluster
+Install Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
 
 ```bash
 dapr init -k

@@ -1,0 +1,19 @@
+# kubectl apply -f ./manifests/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: api-gateway-rules
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - http:
+        paths:
+          # This is very much a work in progress, and currently allows everything through to make testing easier
+          # The end goal is probably to just expose the slack endpoint(s), and then the slack service will
+          # communicate internally with everything else (currently just the HR api).
+          - path: /
+            backend:
+              serviceName: nginx-ingress-dapr
+              servicePort: 80                

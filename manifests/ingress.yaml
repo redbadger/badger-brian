@@ -10,7 +10,9 @@ spec:
   rules:
     - http:
         paths:
-          # Only expose the Dapr invoke API, lets us call our services and nothing more
+          # This is very much a work in progress, and currently allows everything through to make testing easier
+          # The end goal is probably to just expose the slack endpoint(s), and then the slack service will
+          # communicate internally with everything else (currently just the HR api).
           - path: /
             backend:
               serviceName: nginx-ingress-dapr

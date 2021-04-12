@@ -53,7 +53,82 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
-## WIP: deployment to kubernetes
+## WIP: Deploy slack service to kubernetes
+
+Create a kubernetes cluster somewhere
+
+```bash
+gcloud container clusters create dapr --num-nodes=1
+```
+
+Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
+
+```bash
+dapr init -k
+```
+
+Create the slack Node App. 
+
+```bash
+kubectl apply -k manifests/slack/
+```
+
+Create the secret to authenticate with the GitHub Container registry
+
+1. Better Option. This didn't work for Cedd, although it is straight from the docs. Use github username and a token with container registry access as the password for `docker login`. Replace `/users/ceddburge/.docker/config.json` with your value.
+
+```bash
+docker login https://ghcr.io
+kubectl create secret generic github-container-registry \
+    --from-file=.dockerconfigjson=/users/ceddburge/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson \
+    --namespace slack
+```
+
+2. Slightly less secure option. This did work for Cedd, but is slightly less secure, as the token / password is saved in your terminal history. Replace `<github username>`, `<token with container registry access>` and `<email address>`  with your values.
+
+```bash
+kubectl create secret docker-registry github-container-registry \
+    --docker-username=<github username> \
+    --docker-password=<token with container registry access> \
+    --docker-server=ghcr.io \
+    --docker-email=<email address> \
+    --namespace=slack
+```
+
+Check things look ok
+
+```bash
+kubectl get pods --namespace slack
+```
+
+Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack` and then navigate to http://ip-address/ping.
+
+Install the nginx ingress controller
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
+```
+
+Install the ingress rules. These forward to the dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
+
+```bash
+kubectl apply -f ./manifests/ingress.yaml
+```
+
+Call the slack app via dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+
+```
+curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+```
+
+At this point the slack app is still available directly on the external id address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
+
+## WIP: Test deployment to kubernetes
+
+These instructions will be removed soon, but are probably helpful for a while we are getting up to speed with Dapr. Using a public pre existing image and yaml definition from the internet narrows down the surface area of potential problems a lot, and could be useful when working things out.
 
 Create a kubernetes cluster somewhere
 

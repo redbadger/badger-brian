@@ -13,8 +13,14 @@ spec:
     metadata:
       labels:
         app: slack
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "slack"
+        dapr.io/app-port: "3000"
     spec:
       serviceAccountName: slack-sa
+      imagePullSecrets:
+        - name: github-container-registry
       containers:
         - name: slack
           image: ghcr.io/redbadger/slack

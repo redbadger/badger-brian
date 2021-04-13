@@ -19,9 +19,11 @@ spec:
         dapr.io/app-port: "3000"
     spec:
       serviceAccountName: hr-sa
+      imagePullSecrets:
+        - name: github-container-registry
       containers:
         - name: hr
-          image: ghcr.io/redbadger/hr:latest
+          image: ghcr.io/redbadger/hr
           imagePullPolicy: Never
           ports:
             - containerPort: 3000

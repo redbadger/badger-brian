@@ -1,0 +1,5 @@
+# This assumes that there is only one container in the containers list
+# We could add more indexes if required
+- op: add
+  path: /spec/template/spec/containers/0/imagePullPolicy
+  value: Never

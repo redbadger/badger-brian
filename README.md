@@ -55,30 +55,60 @@ There are three steps to the CI workflow:
 
 ## WIP: Run locally and in cloud cluster / from github container registry
 
-done: have found up to date kustomize documentation https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
-doing: uses bases (hr and slack) and overlays (development and production) to sort our deploying locally and to production
-
-todo: make work for existing setup on gcloud
-todo: get on a new branch and sort out a commit (but not a pr)
-todo: make work for new local based setup, think the containers are hosted locally when you build them, and require no auth, but there might be some niggles.
+todo: make sure it works with the mono repo build pushing thing, although I will only really find this out when merging to master
+todo: the local setup works now, so need to add a ping endpoint to the hr app, and then call it from the slack app instead of returning "pong" directly
 
 
-todo: all below 
-this bit of deployment.yaml needs kustomization
-```
-      imagePullSecrets:
-        - name: github-container-registry
-      containers:
-        - name: hr
-          image: ghcr.io/redbadger/hr
-          imagePullPolicy: Never
+Create a kubernetes cluster somewhere
+
+```bash
+gcloud container clusters create dapr --num-nodes=1
 ```
 
-this bit of service-acount.yaml
+Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
+
+```bash
+dapr init -k
 ```
-imagePullSecrets:
-  - name: github-container-registry
+
+Create the things. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install customize`. This works when using the "docker-desktop" k8s cluster, if you are using minikube you will probably need to [set the docker daemon](https://stackoverflow.com/questions/42564058/how-to-use-local-docker-images-with-minikube)
+
+```bash
+docker build --progress=plain -t slack:latest ./lib/slack
+docker build --progress=plain -t hr:latest ./lib/hr
+kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
 ```
+
+Check things look ok
+
+```bash
+kubectl get pods --namespace slack
+```
+
+Check the ping endpoint works (http://localhost/ping)
+
+Install the nginx ingress controller
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
+```
+
+Install the ingress rules. These forward to the dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
+
+```bash
+kubectl apply -f ./manifests/ingress.yaml
+```
+
+Call the slack app via dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+
+```
+curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+```
+
+At this point the slack app is still available directly on the external id address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
+
 
 ## WIP: Deploy slack service to kubernetes
 
@@ -94,7 +124,7 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the slack Node App. 
+Create the things 
 
 ```bash
 kubectl apply -k manifests/slack/

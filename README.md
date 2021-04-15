@@ -53,6 +53,33 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
+## WIP: Run locally and in cloud cluster / from github container registry
+
+done: have found up to date kustomize documentation https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
+doing: uses bases (hr and slack) and overlays (development and production) to sort our deploying locally and to production
+
+todo: make work for existing setup on gcloud
+todo: get on a new branch and sort out a commit (but not a pr)
+todo: make work for new local based setup, think the containers are hosted locally when you build them, and require no auth, but there might be some niggles.
+
+
+todo: all below 
+this bit of deployment.yaml needs kustomization
+```
+      imagePullSecrets:
+        - name: github-container-registry
+      containers:
+        - name: hr
+          image: ghcr.io/redbadger/hr
+          imagePullPolicy: Never
+```
+
+this bit of service-acount.yaml
+```
+imagePullSecrets:
+  - name: github-container-registry
+```
+
 ## WIP: Deploy slack service to kubernetes
 
 Create a kubernetes cluster somewhere

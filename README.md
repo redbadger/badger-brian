@@ -99,7 +99,7 @@ Call the slack app via dapr. The external IP address of the ingress controller c
 curl http://ip-address/v1.0/invoke/slack.slack/method/ping
 ```
 
-At this point the slack app is still available directly on the external id address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
+At this point the slack app is still available directly on the external ip address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
 
 
 ## WIP: Deploy slack service to kubernetes

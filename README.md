@@ -63,7 +63,7 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the things. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install customize`. This works when using the "docker-desktop" k8s cluster, if you are using minikube you will probably need to [set the docker daemon](https://stackoverflow.com/questions/42564058/how-to-use-local-docker-images-with-minikube)
+Create the things. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`. This works when using the "docker-desktop" k8s cluster, if you are using minikube you will probably need to [set the docker daemon](https://stackoverflow.com/questions/42564058/how-to-use-local-docker-images-with-minikube)
 
 ```bash
 docker build --progress=plain -t slack:latest ./lib/slack

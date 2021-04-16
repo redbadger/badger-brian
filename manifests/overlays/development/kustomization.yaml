@@ -1,15 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-bases:
-  - ../../bases/hr
-  - ../../bases/slack
+resources:
+- ../../bases/hr
+- ../../bases/slack
 
 images:
 - name: hr
   newName: hr
   newTag: latest
-images:
 - name: slack
   newName: slack
   newTag: latest

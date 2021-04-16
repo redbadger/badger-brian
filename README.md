@@ -53,11 +53,7 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
-## WIP: Run locally and in cloud cluster / from github container registry
-
-todo: make sure it works with the mono repo build pushing thing, although I will only really find this out when merging to master
-todo: the local setup works now, so need to add a ping endpoint to the hr app, and then call it from the slack app instead of returning "pong" directly
-
+## WIP: Deploy Slack and Hr service locally
 
 Use the 'docker-desktop' local k8s cluster.
 

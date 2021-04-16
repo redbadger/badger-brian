@@ -59,11 +59,7 @@ todo: make sure it works with the mono repo build pushing thing, although I will
 todo: the local setup works now, so need to add a ping endpoint to the hr app, and then call it from the slack app instead of returning "pong" directly
 
 
-Create a kubernetes cluster somewhere
-
-```bash
-gcloud container clusters create dapr --num-nodes=1
-```
+Use the 'docker-desktop' local k8s cluster.
 
 Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
 

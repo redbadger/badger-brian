@@ -53,6 +53,55 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
+## WIP: Deploy Slack and Hr service locally
+
+Use the 'docker-desktop' local k8s cluster.
+
+Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
+
+```bash
+dapr init -k
+```
+
+Create the things. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`. This works when using the "docker-desktop" k8s cluster, if you are using minikube you will probably need to [set the docker daemon](https://stackoverflow.com/questions/42564058/how-to-use-local-docker-images-with-minikube)
+
+```bash
+docker build --progress=plain -t slack:latest ./lib/slack
+docker build --progress=plain -t hr:latest ./lib/hr
+kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
+```
+
+Check things look ok
+
+```bash
+kubectl get pods --namespace slack
+```
+
+Check the ping endpoint works (http://localhost/ping)
+
+Install the nginx ingress controller
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
+```
+
+Install the ingress rules. These forward to the dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
+
+```bash
+kubectl apply -f ./manifests/ingress.yaml
+```
+
+Call the slack app via dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+
+```
+curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+```
+
+At this point the slack app is still available directly on the external ip address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
+
+
 ## WIP: Deploy slack service to kubernetes
 
 Create a kubernetes cluster somewhere
@@ -67,7 +116,7 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the slack Node App. 
+Create the things 
 
 ```bash
 kubectl apply -k manifests/slack/

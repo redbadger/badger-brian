@@ -36,6 +36,13 @@ async fn run() -> Result<()> {
         Ok(resp)
     });
 
+    app.at("/ping").get(|_| async move {
+        let mut resp = Response::new(StatusCode::Ok);
+        resp.set_body("pong");
+        resp.set_content_type(mime::PLAIN);
+        Ok(resp)
+    });
+
     app.listen(host_and_port).await?;
 
     Ok(())

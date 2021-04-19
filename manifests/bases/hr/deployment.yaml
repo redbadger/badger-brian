@@ -23,8 +23,8 @@ spec:
         - name: github-container-registry
       containers:
         - name: hr
-          image: ghcr.io/redbadger/hr
-          imagePullPolicy: Never
+          image: hr
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
           resources:

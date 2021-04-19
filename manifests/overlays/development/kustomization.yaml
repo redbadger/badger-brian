@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../bases/hr
+- ../../bases/slack
+
+images:
+- name: hr
+  newName: hr
+  newTag: latest
+- name: slack
+  newName: slack
+  newTag: latest
+
+patches:
+- path: patch.yaml
+  target:
+    kind: Deployment

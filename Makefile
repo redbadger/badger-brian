@@ -8,8 +8,8 @@ repo := ghcr.io/redbdager
 
 .PHONY: ci
 ci: ## sets tag for deployment
-	cd ./manifests/$(service) \
-	&& kustomize edit set image $(repo)/$(service)=$(repo)/$(service)@$(digest)
+	cd ./manifests/overlays/production \
+	&& kustomize edit set image $(service)=$(repo)/$(service)@$(digest)
 
 .PHONY: ci-finish
 ci-finish: ## prepares for deployment

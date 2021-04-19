@@ -5,10 +5,9 @@ images:
 - digest: sha256:9584fbcb56f312991c0118fba11ec7dbd66c1fee307f7eca1dfccf37283e07d7
   name: hr
   newName: ghcr.io/redbdager/hr
-- digest: sha256:63f6b4115727c2e921a9818bad0f1080754344d63f129323323aa457a34ce473
+- digest: sha256:bd06ddae32140aec6dfb6e17840f7c47b0c086bda8de0d420ebea5b4e2a0aaf4
   name: slack
   newName: ghcr.io/redbdager/slack
 resources:
 - ../../bases/hr
 - ../../bases/slack
-

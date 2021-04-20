@@ -3,10 +3,6 @@ import fetch from 'node-fetch';
 
 const app = express()
 
-// This environment variable is injected automatically into the container by dapr
-// DAPR_GRPC_PORT is also injected, although we don't use it
-const daprPort = process.env.DAPR_HTTP_PORT;
-
 const port = process.env.PORT || 3001
 
 app.get('/ping', async (_req, res) => {
@@ -36,6 +32,10 @@ app.get('/:userId/manager', async (req, res) => {
 })
 
 app.listen(port, () => console.log(`http://localhost:${port}`))
+
+// This environment variable is injected automatically into the container by dapr
+// DAPR_GRPC_PORT is also injected, although we don't use it
+const daprPort = process.env.DAPR_HTTP_PORT;
 
 const managerQuery =
   `query ManagerOf($userId: String!){

@@ -22,22 +22,11 @@ app.get('/ping', async (_req, res) => {
 app.get('/:userId/manager', async (req, res) => {
   // We will probably want to use relay or something later as the GraphQl usage gets more 
   // complex, but I think hand rolling things is fine for now
-  const query =
-    `{
-        human(id: "${req.params.userId}") {
-          id
-          name
-          manager {
-            id
-            name
-          }
-        }
-      }`
-
   fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/graphql`, {
     "body": JSON.stringify(
       {
-        "query": query
+        "query": managerQuery,
+        "variables": { userId: req.params.userId }
       }),
     "method": "POST",
   })
@@ -47,3 +36,16 @@ app.get('/:userId/manager', async (req, res) => {
 })
 
 app.listen(port, () => console.log(`http://localhost:${port}`))
+
+const managerQuery =
+  `query ManagerOf($userId: String!){
+    human(id: $userId) {
+      id
+      name
+      manager {
+        id
+        name
+      }
+    }
+  }`
+

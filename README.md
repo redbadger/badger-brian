@@ -53,9 +53,50 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
-## WIP: Deploy Slack and Hr service locally
+## Running on local Dapr Instance
 
-Use the 'docker-desktop' local k8s cluster.
+Make sure Docker is running (kubernetes is not required)
+
+Start Dapr locally
+
+```
+dapr init
+```
+
+Run the Slack and Hr Apis
+
+```
+cd lib/slack
+dapr run --app-id slack --app-port 3001 npm start
+```
+
+```
+cd lib/hr
+dapr run --app-id hr --app-port 3000 cargo run
+```
+
+Check Dapr can invoke the Hr ping endpoint (3500 will need to be replaced with the port number of a dapr sidecar, which can be found in the output of `dapr run` or with `netstat -an -ptcp | grep LISTEN`)
+
+```
+curl http://localhost:3500/v1.0/invoke/hr.hr/method/ping
+```
+
+Check that the Slack Api can communicate with the Hr Api via Dapr
+
+```
+curl http://localhost:3001/cedd/manager
+
+```
+
+Check that the Dapr Cli can invoke the Hr ping endpoint
+
+```
+dapr invoke --app-id hr --method ping
+```
+
+## Running on local kubernetes
+
+It is easiest to use the 'docker-desktop' local k8s cluster.
 
 Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
 
@@ -71,13 +112,17 @@ docker build --progress=plain -t hr:latest ./lib/hr
 kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
 ```
 
-Check things look ok
+Check kubernetes resources are running
 
 ```bash
 kubectl get pods --namespace slack
 ```
 
-Check the ping endpoint works (http://localhost/ping)
+Check the ping endpoint works 
+
+```
+curl http://localhost/ping
+```
 
 Install the nginx ingress controller
 
@@ -87,24 +132,23 @@ helm repo update
 helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
 ```
 
-Install the ingress rules. These forward to the dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
+Install the ingress rules. These forward to the Dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
 
 ```bash
 kubectl apply -f ./manifests/ingress.yaml
 ```
 
-Call the slack app via dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+Call the Slack API via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
 
 ```
 curl http://ip-address/v1.0/invoke/slack.slack/method/ping
 ```
 
-At this point the slack app is still available directly on the external ip address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
+## Running on hosted kubernetes
 
+These instructions assume that the docker images for the Slack and Hr Api's already exist on the GitHub Container Registry. This happens as part of the build, so will be the case unless something gets out of date.
 
-## WIP: Deploy slack service to kubernetes
-
-Create a kubernetes cluster somewhere
+Create a Kubernetes cluster
 
 ```bash
 gcloud container clusters create dapr --num-nodes=1
@@ -116,13 +160,13 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the things 
+Create the resources 
 
 ```bash
 kubectl apply -k manifests/slack/
 ```
 
-Create the secret to authenticate with the GitHub Container registry
+Create the secret to authenticate with the GitHub Container Registry (a production secret management solution is not decided yet, see [issue 12](https://github.com/redbadger/badger-brian/issues/12) for details)
 
 1. Better Option. This didn't work for Cedd, although it is straight from the docs. Use github username and a token with container registry access as the password for `docker login`. Replace `/users/ceddburge/.docker/config.json` with your value.
 
@@ -134,7 +178,7 @@ kubectl create secret generic github-container-registry \
     --namespace slack
 ```
 
-2. Slightly less secure option. This did work for Cedd, but is slightly less secure, as the token / password is saved in your terminal history. Replace `<github username>`, `<token with container registry access>` and `<email address>`  with your values.
+2. Slightly less secure option. This did work for Cedd, but is slightly less secure, as the token / password is saved in your terminal history. Replace `<github username>`, `<token with container registry access>` and `<email address>` with your values.
 
 ```bash
 kubectl create secret docker-registry github-container-registry \
@@ -145,13 +189,17 @@ kubectl create secret docker-registry github-container-registry \
     --namespace=slack
 ```
 
-Check things look ok
+Check kubernetes resources are running
 
 ```bash
 kubectl get pods --namespace slack
 ```
 
-Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack` and then navigate to http://ip-address/ping.
+Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack
+
+```
+curl http://ip-address/ping
+```
 
 Install the nginx ingress controller
 
@@ -167,53 +215,8 @@ Install the ingress rules. These forward to the dapr sidecar of the ingress cont
 kubectl apply -f ./manifests/ingress.yaml
 ```
 
-Call the slack app via dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+Call the Slack Api via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
 
 ```
 curl http://ip-address/v1.0/invoke/slack.slack/method/ping
 ```
-
-At this point the slack app is still available directly on the external id address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.
-
-## WIP: Test deployment to kubernetes
-
-These instructions will be removed soon, but are probably helpful for a while we are getting up to speed with Dapr. Using a public pre existing image and yaml definition from the internet narrows down the surface area of potential problems a lot, and could be useful when working things out.
-
-Create a kubernetes cluster somewhere
-
-```bash
-gcloud container clusters create dapr --num-nodes=1
-```
-
-Install Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
-
-```bash
-dapr init -k
-```
-
-Install the Hello Kubernetes Quickstart example Node App. This also installs the Dapr side car, as defined in the yaml
-
-```bash
-kubectl apply -f https://github.com/dapr/quickstarts/blob/master/hello-kubernetes/deploy/node.yaml
-```
-
-Install the nginx ingress controller
-```bash
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
-helm install nginx-ingress ingress-nginx/ingress-nginx -f ./manifests/ingress-controller.yaml -n default
-```
-
-Install the ingress rules. These forward to the dapr sidecar of the ingress controller above, which is called "nginx-ingress-dapr" ("-dapr" is added to the names of things to form the sidecar name)
-
-```bash
-kubectl apply -f ./manifests/ingress.yaml
-```
-
-Call the node app via dapr. The external Ip address of the ingress controller can be found from  `kubectl get services`.
-
-```
-curl http://<external-ip-address-of-ingress-controller>/v1.0/invoke/nodeapp/method/ports
-```
-
-At this point the node app is still available directly on the external id address from the LoadBalancer service that it uses, but the yaml can be edited to change the service to ClusterIP to avoid that.

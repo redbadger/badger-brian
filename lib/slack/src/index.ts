@@ -12,13 +12,14 @@ app.get('/ping', async (_req, res) => {
 
 })
 
-// This is designed as a Rest endpoint, although the HR api is GraphQL. I'm not sure which
-// is best for this, but presumably this slack api is a Backends for Frontends type Api, in
-// which case Rest, or Rpc is probably going to be more suitable that GraphQl.
+// This is currently designed as a Rest endpoint, but the next stage is to integrate it with
+// slack, which probably invovles implementing the slack /command callback (to receive a POST
+// request with urlencoded body as described in 
+// https://api.slack.com/interactivity/slash-commands#app_command_handling)
 app.get('/:userId/manager', async (req, res) => {
   // We will probably want to use relay or something later as the GraphQl usage gets more 
   // complex, but I think hand rolling things is fine for now
-  fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/graphql`, {
+  const response = await fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/graphql`, {
     "body": JSON.stringify(
       {
         "query": managerQuery,
@@ -26,9 +27,9 @@ app.get('/:userId/manager', async (req, res) => {
       }),
     "method": "POST",
   })
-    .then(response => response.json())
-    .then(json => res.send("Respose from hr api: " + json.data.human.manager.name))
-    .catch(error => console.log(error))
+  const body = await response.json()
+
+  res.send("Respose from hr api: " + body.data.human.manager.name)
 })
 
 app.listen(port, () => console.log(`http://localhost:${port}`))

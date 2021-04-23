@@ -160,10 +160,10 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the resources 
+Create the resources. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`. 
 
 ```bash
-kubectl apply -k manifests/slack/
+kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
 ```
 
 Create the secret to authenticate with the GitHub Container Registry (a production secret management solution is not decided yet, see [issue 12](https://github.com/redbadger/badger-brian/issues/12) for details)
@@ -181,18 +181,25 @@ kubectl create secret generic github-container-registry \
 2. Slightly less secure option. This did work for Cedd, but is slightly less secure, as the token / password is saved in your terminal history. Replace `<github username>`, `<token with container registry access>` and `<email address>` with your values.
 
 ```bash
-kubectl create secret docker-registry github-container-registry \
+kubectl create secret docker-registry github-container-registry-slack \
     --docker-username=<github username> \
     --docker-password=<token with container registry access> \
     --docker-server=ghcr.io \
     --docker-email=<email address> \
     --namespace=slack
+
+kubectl create secret docker-registry github-container-registry-hr \
+    --docker-username=<github username> \
+    --docker-password=<token with container registry access> \
+    --docker-server=ghcr.io \
+    --docker-email=<email address> \
+    --namespace=hr
 ```
 
 Check kubernetes resources are running
 
 ```bash
-kubectl get pods --namespace slack
+kubectl get pods --namespace=slack
 ```
 
 Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack

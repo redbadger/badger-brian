@@ -67,7 +67,7 @@ Run the Slack and Hr Api's. The Slack Api will hot reload.
 
 ```
 cd lib/slack
-dapr run --app-id slack --app-port 3001 npm run dev
+dapr run --app-id slack --app-port 3001 yarn dev
 ```
 
 ```

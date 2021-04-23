@@ -63,11 +63,11 @@ Start Dapr locally
 dapr init
 ```
 
-Run the Slack and Hr Apis
+Run the Slack and Hr Api's. The Slack Api will hot reload.
 
 ```
 cd lib/slack
-dapr run --app-id slack --app-port 3001 npm start
+dapr run --app-id slack --app-port 3001 yarn dev
 ```
 
 ```

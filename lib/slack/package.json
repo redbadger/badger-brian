@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node src/index.ts",
+    "dev": "concurrently \"tsc -w\" \"nodemon dist/index.js\"",
     "build": "tsc"
   },
   "dependencies": {
@@ -15,6 +16,8 @@
     "@types/express": "^4.17.11",
     "@types/node": "^14.14.37",
     "@types/node-fetch": "^2.5.10",
+    "concurrently": "^6.0.2",
+    "nodemon": "^2.0.7",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   }

@@ -10,6 +10,12 @@
     "strict": true,
     "esModuleInterop": true
   },
-  "exclude": ["node_modules", "dist"],
-  "include": ["**/*.ts"]
+  "compileOnSave": true,
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "**/*.ts"
+  ]
 }

@@ -16,7 +16,7 @@ I couldn't get it working locally
 
 
 todo
- - get ingress thing working locally probably
+ - [x] get ingress thing working locally probably
  - get working on gcloud again
  - once done, use 3001 for slack port
  - commit
@@ -235,9 +235,10 @@ Check kubernetes resources are running
 kubectl get pods --all-namespaces
 ```
 
-Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack
+Check the endpoints work. 'hello' should return world directly. 'ping' should talk to the Hr Api over dapr, and return 'Response from hr api: pong'. Get the external IP address using `kubectl get services --all-namespaces`
 
 ```
+curl http://ip-address/hello
 curl http://ip-address/ping
 ```
 

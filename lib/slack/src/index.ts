@@ -3,7 +3,11 @@ import fetch from 'node-fetch';
 
 const app = express()
 
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3000
+
+app.get('/hello', async (_req, res) => {
+  res.send("world")
+})
 
 app.get('/ping', async (_req, res) => {
   const response = await fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/ping`)

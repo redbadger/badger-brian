@@ -20,7 +20,7 @@ spec:
     spec:
       serviceAccountName: slack-sa
       imagePullSecrets:
-        - name: github-container-registry-slack
+        - name: github-container-registry
       containers:
         - name: slack
           image: slack

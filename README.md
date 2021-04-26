@@ -1,3 +1,31 @@
+I couldn't get it working on gcloud
+ - not going to the slack api directly
+ - nor going through ingress
+
+have reverted to port 3000 for slack api
+ - need to try again
+ - dockerfile, index.ts, deployment.yaml, service.yaml
+
+I couldn't get it working locally
+- the hello slack api endpoint does now work
+- making the hr api service a LoadBalancer hasn't worked yet, as the slack load balancer is already taking localhost, so the hr one is stuck in pending for ever
+- this comes back from the ping endpoint, so the slack api is working, and either dapr or hr are not 
+  - Respose from hr api: {"errorCode":"ERR_DIRECT_INVOKE","message":"fail to invoke, id: hr.hr, err: failed to invoke target hr after 3 retries"}
+- ok now it is working locally, after a restart of k8s and do everything again
+- probably kubectl applied something and it got detached from the sidecar or similar
+
+
+todo
+ - get ingress thing working locally probably
+ - get working on gcloud again
+ - once done, use 3001 for slack port
+ - commit
+ - then add an endpoint to the slack api for the slack integration / app thing to call, which initially probably just dumps everything to console or something so we can see whats what. presumably i can docker logs it to get at them.
+ - the other thing I could do is work locally and use that internet forwarding thing. I have forgotten what that is, so need to ask on morning standup, and or have a google. https://localxpose.io/ https://ngrok.com/download
+
+
+
+
 # badger-brian
 
 Dapr(y) version of Badger Brain
@@ -115,12 +143,13 @@ kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
 Check kubernetes resources are running
 
 ```bash
-kubectl get pods --namespace slack
+kubectl get pods --all-namespaces
 ```
 
-Check the ping endpoint works 
+Check the endpoints work. 'hello' should return world directly. 'ping' should talk to the Hr Api over dapr, and return 'Response from hr api: pong'
 
 ```
+curl http://localhost/hello
 curl http://localhost/ping
 ```
 
@@ -138,10 +167,10 @@ Install the ingress rules. These forward to the Dapr sidecar of the ingress cont
 kubectl apply -f ./manifests/ingress.yaml
 ```
 
-Call the Slack API via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+Call the Slack API via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services --all-namespaces`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in. The localhost binding for the ingress controller clashes with the localhost binding for the slack service, so this slack/service.yaml needs to be applied to the cluster with spec.type changed from LoadBalancer to ClusterIP before this will work.
 
 ```
-curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+curl http://localhost/v1.0/invoke/slack.slack/method/ping
 ```
 
 ## Running on hosted kubernetes
@@ -151,7 +180,7 @@ These instructions assume that the docker images for the Slack and Hr Api's alre
 Create a Kubernetes cluster
 
 ```bash
-gcloud container clusters create dapr --num-nodes=1
+gcloud container clusters create dapr --num-nodes=2
 ```
 
 Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
@@ -163,7 +192,7 @@ dapr init -k
 Create the resources. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`. 
 
 ```bash
-kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
+kustomize build "./manifests/overlays/production/"  | kubectl apply -f -
 ```
 
 Create the secret to authenticate with the GitHub Container Registry (a production secret management solution is not decided yet, see [issue 12](https://github.com/redbadger/badger-brian/issues/12) for details)
@@ -172,23 +201,27 @@ Create the secret to authenticate with the GitHub Container Registry (a producti
 
 ```bash
 docker login https://ghcr.io
-kubectl create secret generic github-container-registry \
+kubectl create secret generic github-container-registry-slack \
     --from-file=.dockerconfigjson=/users/ceddburge/.docker/config.json \
     --type=kubernetes.io/dockerconfigjson \
     --namespace slack
+kubectl create secret generic github-container-registry-hr \
+    --from-file=.dockerconfigjson=/users/ceddburge/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson \
+    --namespace hr
 ```
 
 2. Slightly less secure option. This did work for Cedd, but is slightly less secure, as the token / password is saved in your terminal history. Replace `<github username>`, `<token with container registry access>` and `<email address>` with your values.
 
 ```bash
-kubectl create secret docker-registry github-container-registry-slack \
+kubectl create secret docker-registry github-container-registry \
     --docker-username=<github username> \
     --docker-password=<token with container registry access> \
     --docker-server=ghcr.io \
     --docker-email=<email address> \
     --namespace=slack
 
-kubectl create secret docker-registry github-container-registry-hr \
+kubectl create secret docker-registry github-container-registry \
     --docker-username=<github username> \
     --docker-password=<token with container registry access> \
     --docker-server=ghcr.io \
@@ -199,7 +232,7 @@ kubectl create secret docker-registry github-container-registry-hr \
 Check kubernetes resources are running
 
 ```bash
-kubectl get pods --namespace=slack
+kubectl get pods --all-namespaces
 ```
 
 Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack

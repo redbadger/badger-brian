@@ -20,7 +20,7 @@ spec:
     spec:
       serviceAccountName: hr-sa
       imagePullSecrets:
-        - name: github-container-registry-hr
+        - name: github-container-registry
       containers:
         - name: hr
           image: hr

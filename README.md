@@ -1,31 +1,3 @@
-I couldn't get it working on gcloud
- - not going to the slack api directly
- - nor going through ingress
-
-have reverted to port 3000 for slack api
- - need to try again
- - dockerfile, index.ts, deployment.yaml, service.yaml
-
-I couldn't get it working locally
-- the hello slack api endpoint does now work
-- making the hr api service a LoadBalancer hasn't worked yet, as the slack load balancer is already taking localhost, so the hr one is stuck in pending for ever
-- this comes back from the ping endpoint, so the slack api is working, and either dapr or hr are not 
-  - Respose from hr api: {"errorCode":"ERR_DIRECT_INVOKE","message":"fail to invoke, id: hr.hr, err: failed to invoke target hr after 3 retries"}
-- ok now it is working locally, after a restart of k8s and do everything again
-- probably kubectl applied something and it got detached from the sidecar or similar
-
-
-todo
- - [x] get ingress thing working locally probably
- - get working on gcloud again
- - once done, use 3001 for slack port
- - commit
- - then add an endpoint to the slack api for the slack integration / app thing to call, which initially probably just dumps everything to console or something so we can see whats what. presumably i can docker logs it to get at them.
- - the other thing I could do is work locally and use that internet forwarding thing. I have forgotten what that is, so need to ask on morning standup, and or have a google. https://localxpose.io/ https://ngrok.com/download
-
-
-
-
 # badger-brian
 
 Dapr(y) version of Badger Brain
@@ -113,7 +85,7 @@ Check that the Slack Api can communicate with the Hr Api via Dapr
 
 ```
 curl http://localhost:3001/cedd/manager
-
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost:3500/v1.0/invoke/slack.slack/method/getManager
 ```
 
 Check that the Dapr Cli can invoke the Hr ping endpoint
@@ -121,6 +93,9 @@ Check that the Dapr Cli can invoke the Hr ping endpoint
 ```
 dapr invoke --app-id hr --method ping
 ```
+
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
 
 ## Running on local kubernetes
 
@@ -151,6 +126,7 @@ Check the endpoints work. 'hello' should return world directly. 'ping' should ta
 ```
 curl http://localhost/hello
 curl http://localhost/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost/getManager
 ```
 
 Install the nginx ingress controller
@@ -171,7 +147,11 @@ Call the Slack API via Dapr. The external IP address of the ingress controller c
 
 ```
 curl http://localhost/v1.0/invoke/slack.slack/method/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost/v1.0/invoke/slack.slack/method/getManager
 ```
+
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
 
 ## Running on hosted kubernetes
 
@@ -240,6 +220,7 @@ Check the endpoints work. 'hello' should return world directly. 'ping' should ta
 ```
 curl http://ip-address/hello
 curl http://ip-address/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address//getManager
 ```
 
 Install the nginx ingress controller
@@ -260,4 +241,8 @@ Call the Slack Api via Dapr. The external IP address of the ingress controller c
 
 ```
 curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address/v1.0/invoke/slack.slack/method/getManager
 ```
+
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.

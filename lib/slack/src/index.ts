@@ -1,5 +1,6 @@
 import express, { response } from 'express'
 import fetch from 'node-fetch';
+import { slackReply } from './core';
 
 const app = express()
 
@@ -17,6 +18,8 @@ app.get('/ping', async (_req, res) => {
   res.send("Respose from hr api: " + body)
 
 })
+
+// We consider this to be the 'domain' layer in the onion architecture
 
 // This is expecting a request from slack, with application/x-www-form-urlencoded data like below.
 // Details at https://api.slack.com/interactivity/slash-commands#app_command_handling
@@ -45,25 +48,23 @@ app.post('/getManager', async (req, res) => {
   // into to something else here (probably cedd.burge@redbadger.com)
   const userName = req.body.text
 
-  const hr_response = await fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/graphql`, {
-    "body": JSON.stringify(
-      {
-        "query": managerQuery,
-        "variables": { userId: req.body.user_name }
-      }),
-    "method": "POST",
-  })
+  // const hr_response = await fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/graphql`, {
+  //   "body": JSON.stringify(
+  //     {
+  //       "query": managerQuery,
+  //       "variables": { userId: req.body.user_name }
+  //     }),
+  //   "method": "POST",
+  // })
 
-  const hr_body = await hr_response.json()
+  // const hr_body = await hr_response.json()
 
-  const manager = hr_body.data.human.manager.name
+  // const manager = hr_body.data.human.manager.name
+  const manager = 'cedd'
 
   // todo: if there is an error, catch it and retur a 200 with some explanatory text, as per
   // slack guidelines at https://api.slack.com/interactivity/slash-commands#responding_with_errors
-  res.json({
-    "response_type": "in_channel",
-    "text": `The manager of ${userName} is ${manager}`
-  })
+  res.json(slackReply(userName, manager))
 
   // Instead of / as well as returning a response, you can also post to an endpoint.
   // This allows longer reponse times, conversations, and things like that
@@ -111,4 +112,3 @@ const managerQuery =
       }
     }
   }`
-

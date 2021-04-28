@@ -1,4 +1,4 @@
-# 2. Deploy HR Api in dapr
+# 4. Deploy HR Api in dapr
 
 Date: 2021-03-31
 

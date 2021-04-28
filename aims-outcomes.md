@@ -36,11 +36,12 @@ This project is giving us a good feel for what is invovled with setting up Dapr.
 The Hr Api doesn't is just a GraphQl adapter to Hr data, doesn't currently have and business logic, and isn't a good candidate for onion architecture.
 
 TODO: The slack webhook endpoint should be refactored to use the [Onion architecture](https://github.com/StuartHarris/onion). Some candidates for the various layers of the onion are:
-  - Validation of the incoming data (the slack message should have a user name (such as '@cedd.burge') and nothing else
-  - Formatting / creation of text of slack message reply (such as 'The manager of @cedd.burge is David Wynne')
-  - Conversion of slack handle (such as '@cedd.burge') into an id that the hr system accepts (such as 'cedd.burge@red-badger.com' or similar). This might possible with a pure text transformation, or it might need a lookup or similar.
-  - Retrieving the data of interest from the slack webhook request payload
-  - Calling the Hr Api
+  - [ ] Validation of the incoming data (the slack message should have a user name (such as '@cedd.burge') and nothing else
+  - [ ] Formatting / creation of text of slack message reply (such as 'The manager of @cedd.burge is David Wynne')
+  - [ ] Conversion of slack handle (such as '@cedd.burge') into an id that the hr system accepts (such as 'cedd.burge@red-badger.com' or similar). This might possible with a pure text transformation, or it might need a lookup or similar.
+  - [x] Retrieving the data of interest from the slack webhook request payload
+  - [x] Calling the Hr Api
+  - [ ] Error handling from the Hr Api
 
 TODO: Maybe do a slack binding. This might be tricky, as there doesn't seem to be any documentation on custom bindings, so maybe they aren't possible yet. The [code for the twitter binding](https://docs.dapr.io/developing-applications/building-blocks/service-invocation/service-invocation-overview/#round-robin-load-balancing-with-mdns) is short and simple though.
 

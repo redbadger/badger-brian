@@ -85,7 +85,7 @@ Check that the Slack Api can communicate with the Hr Api via Dapr
 
 ```
 curl http://localhost:3001/cedd/manager
-
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost:3500/v1.0/invoke/slack.slack/method/getManager
 ```
 
 Check that the Dapr Cli can invoke the Hr ping endpoint
@@ -93,6 +93,9 @@ Check that the Dapr Cli can invoke the Hr ping endpoint
 ```
 dapr invoke --app-id hr --method ping
 ```
+
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
 
 ## Running on local kubernetes
 
@@ -115,13 +118,15 @@ kustomize build "./manifests/overlays/development/"  | kubectl apply -f -
 Check kubernetes resources are running
 
 ```bash
-kubectl get pods --namespace slack
+kubectl get pods --all-namespaces
 ```
 
-Check the ping endpoint works 
+Check the endpoints work. 'hello' should return world directly. 'ping' should talk to the Hr Api over dapr, and return 'Response from hr api: pong'
 
 ```
+curl http://localhost/hello
 curl http://localhost/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost/getManager
 ```
 
 Install the nginx ingress controller
@@ -138,11 +143,15 @@ Install the ingress rules. These forward to the Dapr sidecar of the ingress cont
 kubectl apply -f ./manifests/ingress.yaml
 ```
 
-Call the Slack API via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+Call the Slack API via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services --all-namespaces`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in. The localhost binding for the ingress controller clashes with the localhost binding for the slack service, so this slack/service.yaml needs to be applied to the cluster with spec.type changed from LoadBalancer to ClusterIP before this will work.
 
 ```
-curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+curl http://localhost/v1.0/invoke/slack.slack/method/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost/v1.0/invoke/slack.slack/method/getManager
 ```
+
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
 
 ## Running on hosted kubernetes
 
@@ -151,7 +160,7 @@ These instructions assume that the docker images for the Slack and Hr Api's alre
 Create a Kubernetes cluster
 
 ```bash
-gcloud container clusters create dapr --num-nodes=1
+gcloud container clusters create dapr --num-nodes=2
 ```
 
 Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
@@ -160,10 +169,10 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the resources 
+Create the resources. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`. 
 
 ```bash
-kubectl apply -k manifests/slack/
+kustomize build "./manifests/overlays/production/"  | kubectl apply -f -
 ```
 
 Create the secret to authenticate with the GitHub Container Registry (a production secret management solution is not decided yet, see [issue 12](https://github.com/redbadger/badger-brian/issues/12) for details)
@@ -172,10 +181,14 @@ Create the secret to authenticate with the GitHub Container Registry (a producti
 
 ```bash
 docker login https://ghcr.io
-kubectl create secret generic github-container-registry \
+kubectl create secret generic github-container-registry-slack \
     --from-file=.dockerconfigjson=/users/ceddburge/.docker/config.json \
     --type=kubernetes.io/dockerconfigjson \
     --namespace slack
+kubectl create secret generic github-container-registry-hr \
+    --from-file=.dockerconfigjson=/users/ceddburge/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson \
+    --namespace hr
 ```
 
 2. Slightly less secure option. This did work for Cedd, but is slightly less secure, as the token / password is saved in your terminal history. Replace `<github username>`, `<token with container registry access>` and `<email address>` with your values.
@@ -187,18 +200,27 @@ kubectl create secret docker-registry github-container-registry \
     --docker-server=ghcr.io \
     --docker-email=<email address> \
     --namespace=slack
+
+kubectl create secret docker-registry github-container-registry \
+    --docker-username=<github username> \
+    --docker-password=<token with container registry access> \
+    --docker-server=ghcr.io \
+    --docker-email=<email address> \
+    --namespace=hr
 ```
 
 Check kubernetes resources are running
 
 ```bash
-kubectl get pods --namespace slack
+kubectl get pods --all-namespaces
 ```
 
-Check the ping endpoint works. Get the external IP address using `kubectl get services --namespace=slack
+Check the endpoints work. 'hello' should return world directly. 'ping' should talk to the Hr Api over dapr, and return 'Response from hr api: pong'. Get the external IP address using `kubectl get services --all-namespaces`
 
 ```
+curl http://ip-address/hello
 curl http://ip-address/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address//getManager
 ```
 
 Install the nginx ingress controller
@@ -219,4 +241,8 @@ Call the Slack Api via Dapr. The external IP address of the ingress controller c
 
 ```
 curl http://ip-address/v1.0/invoke/slack.slack/method/ping
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address/v1.0/invoke/slack.slack/method/getManager
 ```
+
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.

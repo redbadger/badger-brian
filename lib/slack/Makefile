@@ -16,11 +16,11 @@ push: ## Push images to registry
 
 .PHONY: run
 run: ## Runs the docker image
-	docker run -it -p 3000:3000 $(image):latest
+	docker run -it -p 3001:3001 $(image):latest
 
 .PHONY: run-ci
 run-ci: ## Runs the docker image in CI
-	docker run -p 3000:3000 $(image):latest
+	docker run -p 3001:3001 $(image):latest
 
 .PHONY: help
 help: ## Display this help screen

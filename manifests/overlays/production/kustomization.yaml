@@ -2,12 +2,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 images:
-- digest: sha256:edfca29e4e64c0ed0db9c78c129601a76af386146c1ff1ad52edb928e97b8bdc
+- digest: sha256:4b4aa2fa505128fb9b1610bd43d8c8765c65ef8bbe64d5a06c3ab367bc703cbd
   name: hr
-  newName: ghcr.io/redbdager/hr
-- digest: sha256:077028c6aed71647b3e654a3c2d67f87080f20b127f01cf12ec5c9e9edfe916a
+  newName: ghcr.io/redbadger/hr
+- digest: sha256:a118837485f63bd96c603fdd2efef4875c55b7c32bce75f815c5c20d91259632
   name: slack
-  newName: ghcr.io/redbdager/slack
+  newName: ghcr.io/redbadger/slack
 resources:
 - ../../bases/hr
 - ../../bases/slack

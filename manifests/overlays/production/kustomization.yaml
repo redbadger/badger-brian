@@ -5,9 +5,9 @@ images:
 - digest: sha256:4b4aa2fa505128fb9b1610bd43d8c8765c65ef8bbe64d5a06c3ab367bc703cbd
   name: hr
   newName: ghcr.io/redbadger/hr
-- digest: sha256:a118837485f63bd96c603fdd2efef4875c55b7c32bce75f815c5c20d91259632
+- digest: sha256:d196a64b1f120973b2a76c3e1e4edf1a9f1ff8517f9eeca719ec76cb96f666cd
   name: slack
-  newName: ghcr.io/redbadger/slack
+  newName: ghcr.io/redbdager/slack
 resources:
 - ../../bases/hr
 - ../../bases/slack

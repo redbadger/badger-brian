@@ -4,7 +4,7 @@ build-url := https://github.com/redbadger/badger-brian/actions/
 
 service := service-name
 
-repo := ghcr.io/redbdager
+repo := ghcr.io/redbadger
 
 .PHONY: ci
 ci: ## sets tag for deployment

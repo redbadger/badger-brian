@@ -17,6 +17,7 @@ spec:
         dapr.io/enabled: "true"
         dapr.io/app-id: "slack"
         dapr.io/app-port: "3001"
+        dapr.io/config: "tracing"
     spec:
       serviceAccountName: slack-sa
       imagePullSecrets:

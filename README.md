@@ -17,16 +17,21 @@ We are recording architectural decisions as we go, using [Lightweight Architectu
 ---
 
 ## Monorepo Structure
+
 ### `/lib`
+
 This is where our services live, any service in here will be run by the
 [CI](#ci) and will eventually be deployed on our k8s cluster.
 
 ### `/manifests`
+
 This is effectively our gitops directory. It contains manifests for k8s and dapr
 which will be applied to the cluster on push/merge to master.
 
 ## CI
+
 To allow the CI to run on your service you'll need to set up a few things:
+
 - A `Dependencies` file to your service root, this is used by
   [monobuild](https://github.com/charypar/monobuild) to build a dependency graph
 - A `Dockerfile` so that your service can be built and distributed
@@ -94,7 +99,7 @@ Check that the Dapr Cli can invoke the Hr ping endpoint
 dapr invoke --app-id hr --method ping
 ```
 
-You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it.
 TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
 
 ## Running on local kubernetes
@@ -143,14 +148,14 @@ Install the ingress rules. These forward to the Dapr sidecar of the ingress cont
 kubectl apply -f ./manifests/ingress.yaml
 ```
 
-Call the Slack API via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services --all-namespaces`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in. The localhost binding for the ingress controller clashes with the localhost binding for the slack service, so this slack/service.yaml needs to be applied to the cluster with spec.type changed from LoadBalancer to ClusterIP before this will work.
+Call the Slack API via Dapr. The external IP address of the ingress controller can be found from `kubectl get services --all-namespaces`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in. The localhost binding for the ingress controller clashes with the localhost binding for the slack service, so this slack/service.yaml needs to be applied to the cluster with spec.type changed from LoadBalancer to ClusterIP before this will work.
 
 ```
 curl http://localhost/v1.0/invoke/slack.slack/method/ping
 curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://localhost/v1.0/invoke/slack.slack/method/getManager
 ```
 
-You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it.
 TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
 
 ## Running on hosted kubernetes
@@ -160,7 +165,7 @@ These instructions assume that the docker images for the Slack and Hr Api's alre
 Create a Kubernetes cluster
 
 ```bash
-gcloud container clusters create dapr --num-nodes=2
+gcloud container clusters create dapr --num-nodes=3
 ```
 
 Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernetes/kubernetes-deploy/)
@@ -169,13 +174,22 @@ Initialize Dapr on the cluster (https://docs.dapr.io/operations/hosting/kubernet
 dapr init -k
 ```
 
-Create the resources. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`. 
+Create the namespaces (TODO: the namespaces make the deployment / instructions more complicated, have a think about whether they are warranted at some point, and remove if necessary)
 
 ```bash
-kustomize build "./manifests/overlays/production/"  | kubectl apply -f -
+kubectl apply -f ./manifests/namespaces/hr.yaml
+kubectl apply -f ./manifests/namespaces/slack.yaml
 ```
 
-Create the secret to authenticate with the GitHub Container Registry (a production secret management solution is not decided yet, see [issue 12](https://github.com/redbadger/badger-brian/issues/12) for details)
+Install the zipkin distributed tracing (TODO: could write a manisfest for this)
+
+```
+kubectl create deployment zipkin --image openzipkin/zipkin
+kubectl expose deployment zipkin --type LoadBalancer --port 9411
+kubectl apply -f manifests/zipkin-configuration.yaml
+```
+
+Create the secrets to authenticate with the GitHub Container Registry (a production secret management solution is not decided yet, see [issue 12](https://github.com/redbadger/badger-brian/issues/12) for details)
 
 1. Better Option. This didn't work for Cedd, although it is straight from the docs. Use github username and a token with container registry access as the password for `docker login`. Replace `/users/ceddburge/.docker/config.json` with your value.
 
@@ -209,6 +223,12 @@ kubectl create secret docker-registry github-container-registry \
     --namespace=hr
 ```
 
+Create the resources. The version of Kustomize inside kubectl is quite old, so we need to use kustomize directly. [Install](https://kubectl.docs.kubernetes.io/installation/kustomize/) with `brew install kustomize`.
+
+```bash
+kustomize build "./manifests/overlays/production/"  | kubectl apply -f -
+```
+
 Check kubernetes resources are running
 
 ```bash
@@ -220,7 +240,7 @@ Check the endpoints work. 'hello' should return world directly. 'ping' should ta
 ```
 curl http://ip-address/hello
 curl http://ip-address/ping
-curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address//getManager
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address/getManager
 ```
 
 Install the nginx ingress controller
@@ -237,12 +257,14 @@ Install the ingress rules. These forward to the dapr sidecar of the ingress cont
 kubectl apply -f ./manifests/ingress.yaml
 ```
 
-Call the Slack Api via Dapr. The external IP address of the ingress controller can be found from  `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in.
+Call the Slack Api via Dapr. The external IP address of the ingress controller can be found from `kubectl get services`. **slack**.slack is from `dapr.io/app-id` in deployment.yaml and slack.**slack** is the namespace that the deployment is in. When done, you can debug by using ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it.
 
 ```
 curl http://ip-address/v1.0/invoke/slack.slack/method/ping
 curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data @lib/slack/exampleRequest.txt  http://ip-address/v1.0/invoke/slack.slack/method/getManager
 ```
 
-You can also use ngrok or similar to expose the endpoint to the internet and then edit the slack [slash command](https://api.slack.com/apps/A01SHH2QF8S/slash-commands) to point at it. 
+View the zipkin dashboard at http://ip-address:9411/ (get ip-address from `kubectl get services`)
+
 TODO: update instructions when the slack integration is live / in use, probably by creating a test_get_manager slash command.
+TODO: mention killing a process using a port? `netstat -anv | grep <port-number>`

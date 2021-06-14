@@ -2,6 +2,10 @@ app := slack
 image := ghcr.io/redbadger/$(app)
 tag := latest
 
+.PHONY: dev
+dev: ## Start the server and watch for changes, using `dapr run` standalone mode.
+	dapr run --app-id slack --app-port 3001 yarn dev
+
 .PHONY: default
 default: build push
 

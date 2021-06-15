@@ -1,4 +1,2 @@
 target/
-.DS_Store.yarn
-.yarn
-.pnp.js
+.DS_Store

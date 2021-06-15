@@ -3,7 +3,7 @@ image := ghcr.io/redbadger/$(app)
 tag := latest
 
 .PHONY: dev
-dev: yarn.lock ## Start the server and watch for changes, using `dapr run` standalone mode.
+dev: ## Start the server and watch for changes, using `dapr run` standalone mode.
 	pnpm install
 	dapr run --app-id slack --app-port 3001 -- pnpm dev
 

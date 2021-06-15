@@ -2,12 +2,10 @@ app := slack
 image := ghcr.io/redbadger/$(app)
 tag := latest
 
-yarn.lock: package.json
-	yarn
-
 .PHONY: dev
 dev: yarn.lock ## Start the server and watch for changes, using `dapr run` standalone mode.
-	dapr run --app-id slack --app-port 3001 -- yarn dev
+	pnpm install
+	dapr run --app-id slack --app-port 3001 -- pnpm dev
 
 .PHONY: default
 default: build push

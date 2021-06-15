@@ -58,6 +58,14 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
+## Local dependencies
+
+- Dapr (https://docs.dapr.io/getting-started/install-dapr-cli/)
+- Node
+  - pnpm (`npm install -g pnpm`)
+- Rust
+  - cargo-watch (`cargo install cargo-watch`)
+
 ## Running on local Dapr Instance
 
 Make sure Docker is running (kubernetes is not required)

@@ -7,7 +7,7 @@ yarn.lock: package.json
 
 .PHONY: dev
 dev: yarn.lock ## Start the server and watch for changes, using `dapr run` standalone mode.
-	dapr run --app-id slack --app-port 3001 yarn dev
+	dapr run --app-id slack --app-port 3001 -- yarn dev
 
 .PHONY: default
 default: build push

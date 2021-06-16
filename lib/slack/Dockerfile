@@ -2,14 +2,16 @@ FROM node:lts-alpine AS builder
 
 RUN npm install -g pnpm
 WORKDIR /opt/app
-ENV NODE_ENV=production
 COPY pnpm-lock.yaml ./
-RUN pnpm fetch --prod
+RUN pnpm fetch
 
 # ----------
 
 COPY . .
-RUN pnpm build --offline --prod
+# For pnpm, this is just hardlinking a bunch of directories, so it's basically free.
+RUN pnpm install --offline --dev
+RUN NODE_ENV=production pnpm build
+RUN pnpm prune --prod
 
 # ----------
 

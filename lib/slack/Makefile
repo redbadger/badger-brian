@@ -5,7 +5,11 @@ tag := latest
 .PHONY: dev
 dev: ## Start the server and watch for changes, using `dapr run` standalone mode.
 	pnpm install
-	dapr run --app-id slack --app-port 3001 -- pnpm dev
+	dapr run \
+		--config ../../dapr-config-slim.yaml \
+		--app-id slack \
+		--app-port 3001 \
+		-- pnpm dev
 
 .PHONY: default
 default: build push

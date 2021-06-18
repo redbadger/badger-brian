@@ -24,12 +24,6 @@ async fn run() -> Result<()> {
 
     let mut app = tide::new();
 
-    app.with(tide_tracing::TraceMiddleware);
-    let tracer = opentelemetry::sdk::export::trace::stdout::new_pipeline().install_simple();
-    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
-    use tracing_subscriber::layer::SubscriberExt;
-    let subscriber = tracing_subscriber::Registry::default().with(telemetry);
-
     app.at("/graphql")
         .post(async_graphql_tide::endpoint(schema));
 
@@ -49,14 +43,20 @@ async fn run() -> Result<()> {
         Ok(resp)
     });
 
-    tracing::subscriber::with_default(subscriber, || {
-        let root = tracing::span!(tracing::Level::TRACE, "app_start", work_units = 2);
-        let _enter = root.enter();
+    app.with(tide_tracing::TraceMiddleware::new());
+    let tracer = opentelemetry::sdk::export::trace::stdout::new_pipeline().install_simple();
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+    use tracing_subscriber::layer::SubscriberExt;
+    let subscriber = tracing_subscriber::Registry::default().with(telemetry);
 
-        tracing::error!("This event will be logged in the root span.");
+    tracing::subscriber::set_global_default(subscriber)?;
+    
+    let root = tracing::span!(tracing::Level::TRACE, "app_start", work_units = 2);
+    let _enter = root.enter();
 
-        app.listen(host_and_port)
-    }).await?;
+    tracing::error!("This event will be logged in the root span.");
+
+    app.listen(host_and_port).await?;
 
     Ok(())
 }

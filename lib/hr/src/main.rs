@@ -44,7 +44,8 @@ async fn run() -> Result<()> {
     });
 
     app.with(tide_tracing::TraceMiddleware::new());
-    let tracer = opentelemetry::sdk::export::trace::stdout::new_pipeline().install_simple();
+    opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
+    let tracer = opentelemetry_zipkin::new_pipeline().install_simple()?;
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
     use tracing_subscriber::layer::SubscriberExt;
     let subscriber = tracing_subscriber::Registry::default().with(telemetry);

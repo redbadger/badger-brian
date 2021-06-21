@@ -9,7 +9,7 @@ RUN pnpm fetch
 
 COPY . .
 # For pnpm, this is just hardlinking a bunch of directories, so it's basically free.
-RUN pnpm install --offline --dev
+RUN pnpm install --offline
 RUN NODE_ENV=production pnpm build
 RUN pnpm prune --prod
 

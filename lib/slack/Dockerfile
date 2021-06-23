@@ -1,19 +1,17 @@
-FROM node:lts-alpine AS deps
+FROM node:lts-alpine AS builder
 
+RUN npm install -g pnpm
 WORKDIR /opt/app
-COPY package.json yarn.lock ./
-RUN yarn config set no-progress && \
-    yarn --frozen-lockfile
+COPY pnpm-lock.yaml ./
+RUN pnpm fetch
 
 # ----------
 
-FROM node:lts-alpine AS builder
-
-WORKDIR /opt/app
-ENV NODE_ENV=production
 COPY . .
-COPY --from=deps /opt/app/node_modules ./node_modules
-RUN yarn build
+# For pnpm, this is just hardlinking a bunch of directories, so it's basically free.
+RUN pnpm install --offline
+RUN NODE_ENV=production pnpm build
+RUN pnpm prune --prod
 
 # ----------
 

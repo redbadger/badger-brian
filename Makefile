@@ -6,6 +6,10 @@ service := service-name
 
 repo := ghcr.io/redbadger
 
+.PHONY: dev
+dev: ## runs all services and watches for changes
+	pnpx concurrently "make -C lib/hr dev" "make -C lib/slack dev"
+
 .PHONY: ci
 ci: ## sets tag for deployment
 	cd ./manifests/overlays/production \

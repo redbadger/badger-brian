@@ -2,6 +2,14 @@ app := hr
 image := ghcr.io/redbadger/$(app)
 tag := latest
 
+.PHONY: dev
+dev: ## Start the server and watch for changes, using `dapr run` standalone mode.
+	dapr run \
+		--config ../../dapr-config-slim.yaml \
+		--app-id hr \
+		--app-port 3000 \
+		-- cargo watch -x run
+
 .PHONY: default
 default: build push
 

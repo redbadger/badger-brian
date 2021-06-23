@@ -58,6 +58,14 @@ There are three steps to the CI workflow:
      doesn't update any services, only manifests, so the push from the `deploy`
      job will never run another `deploy` job.
 
+## Local dependencies
+
+- Dapr (https://docs.dapr.io/getting-started/install-dapr-cli/)
+- Node
+  - pnpm (`npm install -g pnpm`)
+- Rust
+  - cargo-watch (`cargo install cargo-watch`)
+
 ## Running on local Dapr Instance
 
 Make sure Docker is running (kubernetes is not required)
@@ -66,6 +74,12 @@ Start Dapr locally
 
 ```
 dapr init
+```
+
+or if you avoid running docker, delete `~/.dapr/components/*` and run
+
+```
+dapr init --slim
 ```
 
 Run the Slack and Hr Api's. The Slack Api will hot reload.
@@ -79,6 +93,8 @@ dapr run --app-id slack --app-port 3001 yarn dev
 cd lib/hr
 dapr run --app-id hr --app-port 3000 cargo run
 ```
+
+(or `make dev` in the top level directory to start both apps)
 
 Check Dapr can invoke the Hr ping endpoint (3500 will need to be replaced with the port number of a dapr sidecar, which can be found in the output of `dapr run` or with `netstat -an -ptcp | grep LISTEN`)
 

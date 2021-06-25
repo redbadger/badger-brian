@@ -5,6 +5,7 @@ use std::env;
 use tide::{http::mime, Body, Response, StatusCode};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 use async_graphql::Object;
+use opentelemetry_tide::OpenTelemetryTracingMiddleware;
 
 #[derive(Clone)]
 struct AppState {
@@ -16,7 +17,8 @@ fn main() -> Result<()> {
 }
 
 async fn run() -> Result<()> {
-    let host_and_port = env::var("LISTEN_HOST_AND_PORT").unwrap_or_else(|_| "0.0.0.0:3000".to_owned());
+    let host_and_port =
+        env::var("LISTEN_HOST_AND_PORT").unwrap_or_else(|_| "0.0.0.0:3000".to_owned());
 
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
 
@@ -42,6 +44,27 @@ async fn run() -> Result<()> {
         resp.set_content_type(mime::PLAIN);
         Ok(resp)
     });
+
+    // Hook up `opentelemetry_zipkin` to take opentelemetry traces
+    // and send them to zipkin in batches.
+    // Dapr provides a zipkin service on localhost:9411 by default,
+    // so this bit does not need to be configured.
+    let tracer = opentelemetry_zipkin::new_pipeline()
+        .with_service_name("hr-rs")
+        .install_batch(opentelemetry::runtime::AsyncStd)?;
+
+    // Dapr injects w3c's `traceparent` header. Register a global TraceContextPropagator,
+    // which knows how to fish this out from http headers, and propagate it as a tracing context
+    // (there are a bunch of competing formats, so we have to specify this ourselves).
+    opentelemetry::global::set_text_map_propagator(
+        opentelemetry::sdk::propagation::TraceContextPropagator::new(),
+    );
+
+    // Hook up a middleware to make tracing spans for incoming requests, and send them to zipkin.
+    // This will also extract headers from incoming requests, and use the global propagator
+    // (TraceContextPropagator, above) to make sure it's possible to correlate them with upstream
+    // requests.
+    app.with(OpenTelemetryTracingMiddleware::new(tracer));
 
     app.listen(host_and_port).await?;
 

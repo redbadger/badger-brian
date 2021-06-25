@@ -1,3 +1,5 @@
+import './tracer'
+
 import express, { response } from 'express'
 import fetch from 'node-fetch';
 import { getUserName } from './core';

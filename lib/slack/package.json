@@ -5,10 +5,19 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "concurrently \"tsc -w --preserveWatchOutput\" \"nodemon dist/index.js\"",
+    "dev": "concurrently --kill-others \"tsc -w --preserveWatchOutput\" \"nodemon dist/index.js\"",
     "build": "tsc"
   },
   "dependencies": {
+    "@opentelemetry/api": "^0.21.0",
+    "@opentelemetry/core": "^0.21.0",
+    "@opentelemetry/exporter-zipkin": "^0.21.0",
+    "@opentelemetry/instrumentation-express": "^0.21.0",
+    "@opentelemetry/instrumentation-http": "^0.21.0",
+    "@opentelemetry/instrumentation": "^0.21.0",
+    "@opentelemetry/node": "^0.21.0",
+    "@opentelemetry/resources": "^0.21.0",
+    "@opentelemetry/tracing": "^0.21.0",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1"
   },

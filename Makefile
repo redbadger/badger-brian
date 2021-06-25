@@ -6,9 +6,17 @@ service := service-name
 
 repo := ghcr.io/redbadger
 
+workspace-root := $(shell git rev-parse --show-toplevel)
+dapr-config := $(workspace-root)/dapr-config-slim.yaml
+
 .PHONY: dev
 dev: ## runs all services and watches for changes
-	pnpx concurrently "make -C lib/hr dev" "make -C lib/slack dev"
+	pnpx concurrently --kill-others "make -C lib/hr dev" "make -C lib/slack dev"
+
+.PHONY: dev-trace
+dev-trace: ## runs all services and watches for changes
+	open http://localhost:9411/zipkin
+	$(MAKE) dapr-config=$(workspace-root)/dapr-config-trace.yaml dev
 
 .PHONY: ci
 ci: ## sets tag for deployment

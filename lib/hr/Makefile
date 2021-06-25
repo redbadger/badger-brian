@@ -2,10 +2,13 @@ app := hr
 image := ghcr.io/redbadger/$(app)
 tag := latest
 
+workspace-root := $(shell git rev-parse --show-toplevel)
+dapr-config := $(workspace-root)/dapr-config-slim.yaml
+
 .PHONY: dev
 dev: ## Start the server and watch for changes, using `dapr run` standalone mode.
 	dapr run \
-		--config ../../dapr-config-slim.yaml \
+		--config $(dapr-config) \
 		--app-id hr \
 		--app-port 3000 \
 		-- cargo watch -x run

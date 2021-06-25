@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 images:
-- digest: sha256:0e3149894dc86f5249dedcd46be7ab65d3fe26df8e433117d777b825c842b312
+- digest: sha256:80fa42e9617ad2004a02e917fc5258e2dafde31f7b8b185ad75acb77b0c855a7
   name: hr
   newName: ghcr.io/redbadger/hr
 - digest: sha256:a118837485f63bd96c603fdd2efef4875c55b7c32bce75f815c5c20d91259632

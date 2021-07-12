@@ -22,8 +22,7 @@ jobs:
 
       - name: install monobuild
         run: |
-          go get -d github.com/charypar/monobuild
-          go install github.com/charypar/monobuild@latest
+          go install github.com/alsuren/monobuild@fork
 
       # outputs a list of services needing to be built/deployed
       - name: set services matrix
@@ -32,33 +31,19 @@ jobs:
           # See https://github.com/charypar/monobuild#change-detection
           if [[ $GITHUB_REF == refs/heads/master ]]; then
             # Main branch mode
-            schedule=$(monobuild diff --main-branch)
+            matrix=$(monobuild diff --main-branch --github-matrix)
           else
             # Feature branch mode
-            schedule=$(monobuild diff --base-branch origin/master)
+            matrix=$(monobuild diff --base-branch origin/master --github-matrix)
           fi
-          dependencies=$(echo "$schedule" | awk 'BEGIN { FS = ":" } ; { print $1 }')
-          # create list of dependencies
-          list="["
-          for dep in ${dependencies[@]}; do
-            service=$(basename $dep)
-            list="$list\"$service\",";
-          done
-          # remove last comma
-          list="${list%,}]"
 
           # outputs variable `matrix` which will be used to run concurrent jobs
-          echo "::set-output name=matrix::{\"service\":$list}"
-          if [[ $list == "[]" ]]; then
-            echo "::set-output name=has_changed_services::false"
-          else
-            echo "::set-output name=has_changed_services::true"
-          fi
+          echo "::set-output name=matrix::{\"service\":$matrix}"
 
   build_and_push:
     # Waits for get_changed_services to run
     needs: get_changed_services
-    if: ${{ needs.get_changed_services.outputs.has_changed_services == 'true' }}
+    if: ${{ needs.get_changed_services.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       # Will run a concurrent job for each element in the matrix
@@ -90,7 +75,7 @@ jobs:
 
   deploy:
     needs: [get_changed_services, build_and_push]
-    if: ${{ github.ref == 'refs/heads/master' && needs.get_changed_services.outputs.has_changed_services == 'true' }}
+    if: ${{ github.ref == 'refs/heads/master' && needs.get_changed_services.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}

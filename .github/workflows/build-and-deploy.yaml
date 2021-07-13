@@ -22,7 +22,8 @@ jobs:
 
       - name: install monobuild
         run: |
-          go install github.com/alsuren/monobuild@fork
+          git clone https://github.com/alsuren/monobuild -b github-matrix
+          (cd monobuild && go install)
 
       # outputs a list of services needing to be built/deployed
       - name: set services matrix

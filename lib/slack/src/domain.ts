@@ -1,5 +1,4 @@
-import { SlackReply, composeSlackReply as coreComposeSlackReply } from './core';
-
+import { SlackReply, composeSlackReply as coreComposeSlackReply } from './core'
 
 async function composeSlackReply(
   userName: String,

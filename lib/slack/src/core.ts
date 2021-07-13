@@ -1,6 +1,6 @@
 interface SlackReply {
-    response_type: String,
-    text: String
+  response_type: String
+  text: String
 }
 
 // Slack sends application/x-www-form-urlencoded data, example in exampleRequest.txt
@@ -23,14 +23,14 @@ interface SlackReply {
 //   trigger_id: '2024969546880.2348032665.16dbba515458bbd713a6e1216cf16bbd'
 // }
 const getUserName = (body: any) => {
-    return body.text
+  return body.text
 }
 
 const composeSlackReply = (userName: String, manager: String) => {
-    return {
-        "response_type": "in_channel",
-        "text": `The manager of ${userName} is ${manager}`
-    }
+  return {
+    response_type: 'in_channel',
+    text: `The manager of ${userName} is ${manager}`,
+  }
 }
 
 export { SlackReply, composeSlackReply, getUserName }

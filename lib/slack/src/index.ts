@@ -1,8 +1,8 @@
 import express, { response } from 'express'
-import fetch from 'node-fetch';
-import { getUserName } from './core';
-import { fetchManager } from './infrastructure';
-import { composeSlackReply } from './domain';
+import fetch from 'node-fetch'
+import { getUserName } from './core'
+import { fetchManager } from './infrastructure'
+import { composeSlackReply } from './domain'
 
 const app = express()
 
@@ -13,14 +13,15 @@ const port = process.env.PORT || 3001
 app.use(express.urlencoded({ extended: true }))
 
 app.get('/hello', async (_req, res) => {
-  res.send("world")
+  res.send('world')
 })
 
 app.get('/ping', async (_req, res) => {
-  const response = await fetch(`http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/ping`)
+  const response = await fetch(
+    `http://localhost:${daprPort}/v1.0/invoke/hr.hr/method/ping`
+  )
   const body = await response.text()
-  res.send("Respose from hr api: " + body)
-
+  res.send('Respose from hr api: ' + body)
 })
 
 app.post('/getManager', async (req, res) => {
@@ -46,13 +47,10 @@ app.post('/getManager', async (req, res) => {
   //   "body": JSON.stringify({ "text": chatMessage }),
   //   "method": "POST"
   // })
-
 })
 
 // This environment variable is injected automatically into the container by dapr
 // DAPR_GRPC_PORT is also injected, although we don't use it
-const daprPort = process.env.DAPR_HTTP_PORT;
+const daprPort = process.env.DAPR_HTTP_PORT
 
 app.listen(port, () => console.log(`http://localhost:${port}`))
-
-

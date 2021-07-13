@@ -39,8 +39,9 @@ jobs:
             matrix=$(monobuild diff --base-branch origin/master --github-matrix)
           fi
 
+          echo "$matrix"
           # outputs variable `matrix` which will be used to run concurrent jobs
-          echo "::set-output name=matrix::{\"service\":$matrix}"
+          echo "::set-output name=matrix::$matrix"
 
   build_and_push:
     # Waits for get_changed_services to run
@@ -50,7 +51,8 @@ jobs:
     strategy:
       # Will run a concurrent job for each element in the matrix
       # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix
-      matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
+      matrix:
+        service: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
     outputs:
       digest: ${{ steps.docker-build.outputs.digest }}
 
@@ -80,7 +82,8 @@ jobs:
     if: ${{ github.ref == 'refs/heads/master' && needs.get_changed_services.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
+      matrix:
+        service: ${{fromJson(needs.get_changed_services.outputs.matrix)}}
 
     steps:
       - name: checkout repo
